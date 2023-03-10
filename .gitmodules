@@ -1,0 +1,3 @@
+[submodule "giantsteps-key-dataset"]
+	path = giantsteps-key-dataset
+	url = git@github.com:GiantSteps/giantsteps-key-dataset.git
