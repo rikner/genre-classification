@@ -17,9 +17,7 @@ GENRE_ANNOTATIONS_PATH = os.path.join(
 AUDIO_FILES_PATH = os.path.join(
     ".", "giantsteps-key-dataset", "audio")
 
-DATASET_PATH = "./dataset/"
-
-SPECTROGRAM_PATH = os.path.join(DATASET_PATH, "spectrograms3sec")
+SPECTROGRAM_PATH = os.path.join(".", "dataset", "spectrograms3sec")
 
 
 def feature_extraction():
