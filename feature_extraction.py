@@ -9,21 +9,23 @@ import numpy as np
 from pydub import AudioSegment
 from tqdm import tqdm
 
-from dataset_folders import create_dataset_folders, spectrogram_path
-
 CHUNK_LENGTH_MS = 3000
+
 GENRE_ANNOTATIONS_PATH = os.path.join(
     ".", "giantsteps-key-dataset", "annotations", "genre")
 
 AUDIO_FILES_PATH = os.path.join(
     ".", "giantsteps-key-dataset", "audio")
 
+DATASET_PATH = "./dataset/"
 
-def main():
-    create_dataset_folders()
-    audio_files = Path().glob(AUDIO_FILES_PATH + "/*.wav")
+SPECTROGRAM_PATH = os.path.join(DATASET_PATH, "spectrograms3sec")
 
-    for audio_file in tqdm(audio_files, total=len(glob(AUDIO_FILES_PATH + "/*.wav"))):
+
+def feature_extraction():
+    audio_files = glob(AUDIO_FILES_PATH + "/*.wav")
+
+    for audio_file in tqdm(audio_files):
         audio_file_id = Path(audio_file).stem
         genre = get_genre(audio_file_id)
 
@@ -38,15 +40,19 @@ def main():
             mel_spec_db = librosa.power_to_db(mel_spec, ref=np.max)
 
             # save to file
+            np_file_path = os.path.join(SPECTROGRAM_PATH, genre)
+            if not os.path.exists(np_file_path):
+                os.makedirs(np_file_path)
             chunk_name = audio_file_id + "." + str(i)
-            np_file_path = os.path.join(spectrogram_path, genre, chunk_name)
-            np.save(np_file_path, mel_spec_db)
+            np.save(os.path.join(np_file_path, chunk_name), mel_spec_db)
+
 
 def get_genre(audio_file_id):
     genre_annotation_path = os.path.join(
         GENRE_ANNOTATIONS_PATH, audio_file_id + ".genre")
     with open(genre_annotation_path) as f:
         return f.read().strip()
+
 
 def get_chunks(audio_file):
     audio_segment = AudioSegment.from_wav(audio_file)
@@ -58,4 +64,4 @@ def get_chunks(audio_file):
 
 
 if __name__ == "__main__":
-    main()
+    feature_extraction()
