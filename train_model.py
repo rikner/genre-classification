@@ -6,32 +6,31 @@ import tensorflow as tf
 from keras.layers import Conv2D, Dense, Dropout, Flatten, MaxPooling2D
 from keras.models import Sequential
 from keras.optimizers import Adam
-from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
+import coremltools as ct
 
+
+DATASET_PATH = "./dataset/spectrograms3sec"
 
 def train_model():
-    # Set the path of the npy files
-    dataset_path = "./dataset/spectrograms3sec"
-
-    # Get the labels from the folder names
-    genres = os.listdir(dataset_path)
+    genres = os.listdir(DATASET_PATH)
     num_genres = len(genres)
-    print(f"num_genres: {num_genres}")
 
-    # Extract features for all audio files and create X and y arrays
     print("Loading data")
     X = []
     y = []
     for i, genre in enumerate(genres):
-        genre_path = os.path.join(dataset_path, genre)
+        genre_path = os.path.join(DATASET_PATH, genre)
         for npy_file in os.listdir(genre_path):
             npy_file_path = os.path.join(genre_path, npy_file)
             spectrogram = np.load(npy_file_path)
             X.append(spectrogram)
             y.append(i)
+
+
+    print("Converting integer labels to one-hot encoded labels")
+    y = to_categorical(y, num_genres)
 
     print("Converting to numpy arrays")
     X = np.array(X)
@@ -53,14 +52,29 @@ def train_model():
     model.add(Dense(num_genres, activation='softmax'))
 
     print("Compile model")
-    model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     print("Train model")
-    model.fit(X_train.reshape(X_train.shape[0], X_train.shape[1], X_train.shape[2], 1), 
+    X_train_reshaped = X_train.reshape(X_train.shape[0], X_train.shape[1], X_train.shape[2], 1)
+    X_test_reshaped = X_test.reshape(X_test.shape[0], X_test.shape[1], X_test.shape[2], 1)
+    model.fit(
+        X_train_reshaped, 
         y_train, 
-        epochs=10, 
+        epochs=10,
         batch_size=32, 
-        validation_data=(X_test.reshape(X_test.shape[0], X_test.shape[1], X_test.shape[2], 1), y_test))
+        validation_data=(X_test_reshaped, y_test))
+    
+    print("Save model")
+    model.save("genre-classifier")
+
+    print("Convert to Core ML model")
+    print(model.summary())
+    classifier_config = ct.ClassifierConfig(
+        class_labels=genres,
+        predicted_feature_name="genre",
+    )
+    coreml_model = ct.convert(model, classifier_config=classifier_config)
+    coreml_model.save('GenreClassifier.mlmodel')
 
 
 if __name__ == "__main__":
