@@ -12,10 +12,10 @@ from tqdm import tqdm
 CHUNK_LENGTH_MS = 3000
 
 GENRE_ANNOTATIONS_PATH = os.path.join(
-    ".", "giantsteps-key-dataset", "annotations", "genre")
+    ".", "giantsteps-key-dataset", "annotations", "genre"
+)
 
-AUDIO_FILES_PATH = os.path.join(
-    ".", "giantsteps-key-dataset", "audio")
+AUDIO_FILES_PATH = os.path.join(".", "giantsteps-key-dataset", "audio")
 
 SPECTROGRAM_PATH = os.path.join(".", "dataset", "spectrograms3sec")
 
@@ -31,10 +31,18 @@ def feature_extraction():
             # compute melspectrogram
             audio_array = np.array(chunk.get_array_of_samples())
             max_int = np.iinfo(audio_array.dtype).max
-            audio_array = audio_array.astype('float32') / max_int
+            audio_array = audio_array.astype("float32") / max_int
+
             sr = chunk.frame_rate
             mel_spec = librosa.feature.melspectrogram(
-                y=audio_array, sr=sr, n_mels=128)
+                y=audio_array,
+                sr=sr,
+                n_fft=2048,
+                hop_length=512,
+                n_mels=128,
+                fmin=20,
+                fmax=22050,
+            )
             mel_spec_db = librosa.power_to_db(mel_spec, ref=np.max)
 
             # save to file
@@ -47,7 +55,8 @@ def feature_extraction():
 
 def get_genre(audio_file_id):
     genre_annotation_path = os.path.join(
-        GENRE_ANNOTATIONS_PATH, audio_file_id + ".genre")
+        GENRE_ANNOTATIONS_PATH, audio_file_id + ".genre"
+    )
     with open(genre_annotation_path) as f:
         return f.read().strip()
 
