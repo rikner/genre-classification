@@ -6,7 +6,9 @@ It's currently based on the GiantSteps key dataset (https://github.com/GiantStep
 
 Install dependencies:
 > brew install ffmpeg
+
 > brew install sox
+
 > python3 -m pip install -r requirements.txt
 
 Get the giantsteps key dataset:
